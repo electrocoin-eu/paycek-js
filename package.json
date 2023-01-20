@@ -1,0 +1,19 @@
+{
+  "name": "paycek",
+  "version": "0.0.2",
+  "description": "A connector library for communicating with PayCek public API",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/electrocoin-eu/paycek-js.git"
+  },
+  "author": "Electrocoin d.o.o.",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/electrocoin-eu/paycek-js/issues"
+  },
+  "homepage": "https://paycek.io",
+  "dependencies": {
+    "got": "^11.8.3"
+  }
+}
