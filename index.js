@@ -52,14 +52,7 @@ class Paycek {
 			body: bodyBytes
 		};
 
-		return got
-			.post(this.apiHost + prefixedEndpoint, options)
-			.then(function (result) {
-				return result;
-			})
-			.catch(function (error) {
-				return error;
-			});
+		return got.post(this.apiHost + prefixedEndpoint, options);
 	}
 
 	/**
@@ -98,15 +91,18 @@ class Paycek {
 	 *       generate_pdf: bool
 	 *       client_fields: Object
 	 */
-	async generatePaymentUrl({ profileCode, dstAmount, ...optionalFields }) {
-		const payment = await this.openPayment({ profileCode, dstAmount, ...optionalFields });
-
-		try {
-			return payment.body.data.payment_url;
-		} catch (error) {
-			console.log(payment.body);
-			throw error;
-		}
+	generatePaymentUrl({ profileCode, dstAmount, ...optionalFields }) {
+		return this.openPayment({ profileCode, dstAmount, ...optionalFields })
+			.then((response) => {
+				try {
+					return response.body.data.payment_url;
+				} catch (error) {
+					throw error;
+				}
+			})
+			.catch((error) => {
+				throw error;
+			});
 	}
 
 	getPayment({ paymentCode }) {

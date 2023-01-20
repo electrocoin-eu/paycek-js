@@ -1,6 +1,6 @@
 {
   "name": "paycek",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A connector library for communicating with PayCek public API",
   "main": "index.js",
   "repository": {
