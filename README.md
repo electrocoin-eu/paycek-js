@@ -29,14 +29,14 @@ const paycek = new Paycek('<apiKey>', '<apiSecret>');
 
 #### Get payment
 ```javascript
-payment = await paycek.getPayment({
+const payment = await paycek.getPayment({
     paymentCode: '<paymentCode>'
 });
 ```
 
 #### Open payment
 ```javascript
-payment = await paycek.openPayment({
+const payment = await paycek.openPayment({
     profileCode: '<profileCode>',
     dstAmount: '<dstAmount>',
     location_id: '<locationId>'

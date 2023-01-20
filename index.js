@@ -1,4 +1,4 @@
-const { createHash } = require("crypto");
+const { createHash, timingSafeEqual } = require("crypto");
 const got = require("got");
 
 class Paycek {
@@ -10,7 +10,7 @@ class Paycek {
 		this.encoding = "utf-8";
 	}
 
-	#generateMacHash(nonceString, endpoint, bodyString, httpMethod = "POST", contentType = "application/json") {
+	#generateMacHash(nonceString, endpoint, bodyBytes, httpMethod = "POST", contentType = "application/json") {
 		const hash = createHash("sha3-512");
 		hash.update(`\0`);
 		hash.update(Buffer.from(this.apiKey, this.encoding));
@@ -25,7 +25,7 @@ class Paycek {
 		hash.update(`\0`);
 		hash.update(Buffer.from(contentType, this.encoding));
 		hash.update(`\0`);
-		hash.update(Buffer.from(bodyString, this.encoding));
+		hash.update(bodyBytes);
 		hash.update(`\0`);
 
 		return hash.digest("hex");
@@ -33,10 +33,10 @@ class Paycek {
 
 	#apiCall(endpoint, body) {
 		const prefixedEndpoint = `${this.apiPrefix}/${endpoint}`;
-		const bodyString = JSON.stringify(body);
+		const bodyBytes = Buffer.from(JSON.stringify(body), this.encoding);
 		const nonceString = new Date().getTime().toString();
 
-		const macHash = this.#generateMacHash(nonceString, prefixedEndpoint, bodyString);
+		const macHash = this.#generateMacHash(nonceString, prefixedEndpoint, bodyBytes);
 
 		const headers = {
 			"Content-Type": "application/json",
@@ -49,7 +49,7 @@ class Paycek {
 			method: "POST",
 			responseType: "json",
 			headers: headers,
-			body: Buffer.from(bodyString, this.encoding)
+			body: bodyBytes
 		};
 
 		return got
@@ -60,6 +60,53 @@ class Paycek {
 			.catch(function (error) {
 				return error;
 			});
+	}
+
+	/**
+	 * This method is used to verify callback was encoded by paycek.
+	 * A mac digest will be created by encoding nonce from headers, endpoint, body bytes, your api key and secret, http method and content type.
+	 * That value will be compared with mac digest from headers.
+	 *
+	 * @param {Object} headers: callback headers
+	 * @param {string} endpoint: callback endpoint
+	 * @param {bytes} bodyBytes: callback body bytes
+	 * @param {string} httpMethod: callback http method
+	 * @param {string} contentType: callback content type
+	 * @return {bool} true if the generated mac digest is equal to the one received in headers, false otherwise
+	 */
+	checkHeaders({ headers, endpoint, bodyBytes, httpMethod = "GET", contentType = "" }) {
+		const headersLower = Object.fromEntries(Object.keys(headers).map((key) => [key.toLowerCase(), headers[key]]));
+		const generatedMac = this.#generateMacHash(headersLower["apikeyauth-nonce"], endpoint, bodyBytes, httpMethod, contentType);
+
+		return timingSafeEqual(Buffer.from(headersLower["apikeyauth-mac"], this.encoding), Buffer.from(generatedMac, this.encoding));
+	}
+
+	/**
+	 *  @param optionalFields: Optional fields:
+	 *       payment_id: string
+	 *       location_id: string
+	 *       items: array
+	 *       email: string
+	 *       success_url: string
+	 *       fail_url: string
+	 *       back_url: string
+	 *       success_url_callback: string
+	 *       fail_url_callback: string
+	 *       status_url_callback: string
+	 *       description: string
+	 *       language: string
+	 *       generate_pdf: bool
+	 *       client_fields: Object
+	 */
+	async generatePaymentUrl({ profileCode, dstAmount, ...optionalFields }) {
+		const payment = await this.openPayment({ profileCode, dstAmount, ...optionalFields });
+
+		try {
+			return payment.body.data.payment_url;
+		} catch (error) {
+			console.log(payment.body);
+			throw error;
+		}
 	}
 
 	getPayment({ paymentCode }) {
@@ -123,7 +170,7 @@ class Paycek {
 	}
 
 	/**
-	 *  @param details: Withdraw details object with fields:
+	 *  @param {Object} details: Withdraw details object with fields:
 	 *			iban: string (required)
 	 *			purpose: string
 	 *			model: string
@@ -144,7 +191,7 @@ class Paycek {
 	}
 
 	/**
-	 *  @param profileAutomaticWithdrawDetails: Automatic withdraw details object with fields:
+	 *  @param {Object} profileAutomaticWithdrawDetails: Automatic withdraw details object with fields:
 	 *			iban: string (required)
 	 *			purpose: string
 	 *			model: string
@@ -174,7 +221,7 @@ class Paycek {
 	}
 
 	/**
-	 *  @param profileAutomaticWithdrawDetails: Automatic withdraw details object with fields:
+	 *  @param {Object} profileAutomaticWithdrawDetails: Automatic withdraw details object with fields:
 	 *			iban: string (required)
 	 *			purpose: string
 	 *			model: string
