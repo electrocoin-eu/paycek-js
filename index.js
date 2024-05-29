@@ -68,10 +68,14 @@ class Paycek {
 	 * @return {bool} true if the generated mac digest is equal to the one received in headers, false otherwise
 	 */
 	checkHeaders({ headers, endpoint, bodyBytes, httpMethod = "GET", contentType = "" }) {
-		const headersLower = Object.fromEntries(Object.keys(headers).map((key) => [key.toLowerCase(), headers[key]]));
-		const generatedMac = this.#generateMacHash(headersLower["apikeyauth-nonce"], endpoint, bodyBytes, httpMethod, contentType);
+		try {
+			const headersLower = Object.fromEntries(Object.keys(headers).map((key) => [key.toLowerCase(), headers[key]]));
+			const generatedMac = this.#generateMacHash(headersLower["apikeyauth-nonce"], endpoint, bodyBytes, httpMethod, contentType);
 
-		return timingSafeEqual(Buffer.from(generatedMac, this.encoding), Buffer.from(headersLower["apikeyauth-mac"], this.encoding));
+			return timingSafeEqual(Buffer.from(generatedMac, this.encoding), Buffer.from(headersLower["apikeyauth-mac"], this.encoding));
+		} catch (error) {
+			return false;
+		}
 	}
 
 	/**
