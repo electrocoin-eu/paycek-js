@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2024-06-07
+
+### Changed
+
+- Improved documentation
+
 ## [1.1.1] - 2024-05-28
 
 ### Changed
