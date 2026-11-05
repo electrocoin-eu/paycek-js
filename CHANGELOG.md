@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2026-10-29
+
+### Fixed
+- Updated `http-cache-semantics` to resolve ReDoS vulnerability (CVE-2022-25881) via npm audit fix
+
 ## [1.1.2] - 2024-06-07
 
 ### Changed
